@@ -50,7 +50,7 @@ The `event_log` table has the following structure:
 ---
 
 ## 3. The Dashboard (Final Result)
-This is the final dashboard that summarizes the entire investigation. The step-by-step analysis follows below.
+This dashboard summarizes the entire investigation. The 5 charts tell the story from identifying the problem to the final root cause.
 
 ![Full Investigation Dashboard](./images/dashboard_full.png)
 
@@ -60,10 +60,9 @@ This is the final dashboard that summarizes the entire investigation. The step-b
 Instead of loading raw data into Power BI, I used MySQL to pre-aggregate and segment the data. The analysis is performed at the **SessionID** level to accurately track individual user journeys.
 
 <details>
-<summary>Click to see all 5 (New) SQL Queries</summary>
+<summary>Click to see all 5 SQL Queries</summary>
 
 **Query 1: General 5-Step Funnel (The "What")**
-*This query counts the unique sessions that reached each stage of the 5-step funnel.*
 ```sql
 /*
 -- General 5-Step Funnel Query (The "What")
@@ -123,19 +122,15 @@ ORDER BY
 ````
 
 **Query 2: Hypothesis 1 (Device)**
-*This query segments the 5-step funnel by device.*
 
 ```sql
 /*
 -- Segmentation Query 1 (The "Why" - Part 1: Device)
--- Segments the 5-step funnel by DeviceType.
 */
-
--- STEP 1: Create a temporary summary table of actions per session
 WITH SessionActions AS (
     SELECT
         SessionID,
-        DeviceType, -- The column we segment by
+        DeviceType, 
         MAX(CASE WHEN PageType = 'home' THEN 1 ELSE 0 END) AS saw_homepage,
         MAX(CASE WHEN PageType = 'product_page' THEN 1 ELSE 0 END) AS saw_product_page,
         MAX(CASE WHEN PageType = 'cart' THEN 1 ELSE 0 END) AS saw_cart,
@@ -146,7 +141,6 @@ WITH SessionActions AS (
     GROUP BY
         SessionID, DeviceType
 )
--- STEP 2: Count the results from that temporary table
 SELECT
     DeviceType,
     SUM(saw_homepage) AS homepage_sessions,
@@ -161,19 +155,15 @@ GROUP BY
 ```
 
 **Query 3: Hypothesis 2 (Referral Source)**
-*This query segments the 5-step funnel by referral source.*
 
 ```sql
 /*
 -- Segmentation Query 2 (The "Why" - Part 2: Referral)
--- Segments the 5-step funnel by ReferralSource.
 */
-
--- STEP 1: Create a temporary summary table of actions per session
 WITH SessionActions AS (
     SELECT
         SessionID,
-        ReferralSource, -- <--- The only change is here
+        ReferralSource, 
         MAX(CASE WHEN PageType = 'home' THEN 1 ELSE 0 END) AS saw_homepage,
         MAX(CASE WHEN PageType = 'product_page' THEN 1 ELSE 0 END) AS saw_product_page,
         MAX(CASE WHEN PageType = 'cart' THEN 1 ELSE 0 END) AS saw_cart,
@@ -182,11 +172,10 @@ WITH SessionActions AS (
     FROM
         event_log
     GROUP BY
-        SessionID, ReferralSource -- <--- And here
+        SessionID, ReferralSource
 )
--- STEP 2: Count the results from that temporary table
 SELECT
-    ReferralSource, -- <--- And here
+    ReferralSource, 
     SUM(saw_homepage) AS homepage_sessions,
     SUM(saw_product_page) AS product_page_sessions,
     SUM(saw_cart) AS cart_sessions,
@@ -195,23 +184,19 @@ SELECT
 FROM
     SessionActions
 GROUP BY
-    ReferralSource; -- <--- And here
+    ReferralSource;
 ```
 
 **Query 4: Hypothesis 3 (Country)**
-*This query segments the 5-step funnel by country.*
 
 ```sql
 /*
 -- Segmentation Query 3 (The "Why" - Part 3: Country)
--- Segments the 5-step funnel by Country.
 */
-
--- STEP 1: Create a temporary summary table of actions per session
 WITH SessionActions AS (
     SELECT
         SessionID,
-        Country, -- <--- The only change is here
+        Country, 
         MAX(CASE WHEN PageType = 'home' THEN 1 ELSE 0 END) AS saw_homepage,
         MAX(CASE WHEN PageType = 'product_page' THEN 1 ELSE 0 END) AS saw_product_page,
         MAX(CASE WHEN PageType = 'cart' THEN 1 ELSE 0 END) AS saw_cart,
@@ -220,11 +205,10 @@ WITH SessionActions AS (
     FROM
         event_log
     GROUP BY
-        SessionID, Country -- <--- And here
+        SessionID, Country
 )
--- STEP 2: Count the results from that temporary table
 SELECT
-    Country, -- <--- And here
+    Country, 
     SUM(saw_homepage) AS homepage_sessions,
     SUM(saw_product_page) AS product_page_sessions,
     SUM(saw_cart) AS cart_sessions,
@@ -233,21 +217,15 @@ SELECT
 FROM
     SessionActions
 GROUP BY
-    Country; -- <--- And here
+    Country;
 ```
 
 **Query 5: Hypothesis 4 (Time on Page)**
-*This query tests if users who add to cart spend more time on product pages than users who don't.*
 
 ```sql
 /*
 -- Segmentation Query 4 (The "Why" - Part 4: TimeOnPage)
--- Compares AVG time on product pages for sessions that
--- converted (added to cart) vs. those that did not.
 */
-
--- STEP 1: Create a temporary table to tag each session
--- with its "conversion status" (did they ever reach the cart?)
 WITH SessionStatus AS (
     SELECT
         SessionID,
@@ -257,8 +235,6 @@ WITH SessionStatus AS (
     GROUP BY
         SessionID
 )
--- STEP 2: Join that status back to the main log
--- to compare the time spent ONLY on product pages.
 SELECT
     CASE
         WHEN ss.eventually_added_to_cart = 1 THEN 'Group 1: Added to Cart'
@@ -272,7 +248,7 @@ FROM
 JOIN
     SessionStatus AS ss ON e.SessionID = ss.SessionID
 WHERE
-    e.PageType = 'product_page' -- We ONLY care about time spent on product pages
+    e.PageType = 'product_page' 
 GROUP BY
     user_group;
 ```
@@ -281,47 +257,23 @@ GROUP BY
 
 -----
 
-## 5\. The Investigation (Step-by-Step Analysis)
+## 5\. Insights & Final Recommendation
 
-My analysis followed a process of hypothesis elimination.
+My analysis followed a process of hypothesis elimination, all of which are visible on the dashboard:
 
-### Insight 1 (The "What"): Identifying the Problem
+  * **Insight 1 (The "What"):** The funnel chart (`chart_1_funnel.png`) shows two major drop-offs: one at **Product Page -\> Cart** (the largest) and another at **Cart -\> Checkout**. The investigation focused on the first drop.
 
-The first step was to understand the new 5-step funnel. The data shows two major drop-offs:
+  * **Insight 2 (Hypothesis 1: FALSE):** The `Device` chart (`chart_2_device.png`) proves the problem is not technical. The drop-off pattern is identical across Mobile, Desktop, and Tablet.
 
-1.  **Product Page -\> Cart:** A large number of users view products but never add them to the cart.
-2.  **Cart -\> Checkout:** A significant number of users add items to their cart but abandon before starting the checkout process.
+  * **Insight 3 (Hypothesis 2: FALSE):** The `Referral Source` chart (`chart_3_referral.png`) proves the problem is not marketing "junk traffic". All sources (Google, Social, etc.) convert at the same poor rate.
 
-The drop from **Product Page to Cart** is the largest, so that will be the focus of the investigation.
+  * **Insight 4 (Hypothesis 3: FALSE):** The `Country` chart (`chart_4_country.png`) proves the problem is not logistics (e.g., shipping costs). The drop-off is universal across all countries.
 
-### Insight 2 (Hypothesis 1: FALSE): Is it a Device Issue?
+  * **Insight 5 (Hypothesis 4: FALSE):** The `Time on Page` chart (`chart_5_time.png`) proves the problem is not user confusion. Users who *don't* convert (95s) spend almost the same amount of time on the page as those who *do* (97s).
 
-My first hypothesis was that it could be a technical issue (e.g., the "Add to Cart" button is broken on mobile).
-**Conclusion: FALSE.** The device segmentation chart shows that the drop-off pattern (the salmon-colored bar) is *identical* across Mobile, Desktop, and Tablet. The problem is not technical.
+### Final Conclusion
 
-### Insight 3 (Hypothesis 2: FALSE): Is it a Marketing Issue?
-
-My second hypothesis was that the marketing team was driving "junk traffic" (e.g., from Social Media) that would browse but never buy.
-**Conclusion: FALSE.** The referral source segmentation chart shows that *all* sources (Social Media, Email, Direct, Google) have the exact same drop-off pattern. The traffic is good quality; the problem is on the page.
-
-### Insight 4 (Hypothesis 3: FALSE): Is it a Logistics Issue?
-
-My third hypothesis was that it could be a logistics problem (e.g., high shipping costs to certain countries).
-**Conclusion: FALSE.** The country segmentation chart shows the drop-off is universal. Users in the USA, UK, India, and France abandon at the same rate. It is not a shipping issue.
-
-### Insight 5 (Hypothesis 4: FALSE): Is it a Clarity Issue?
-
-My final hypothesis was that the product page was confusing, and users were leaving quickly because they didn't understand the offer.
-**Conclusion: FALSE.** The time-on-page analysis shows that users who do NOT add to cart (Group 2) spend 95 seconds on average, almost the same as the 97 seconds spent by those who DO (Group 1).
-Users *have* plenty of time to decide; the problem is not confusion.
-
------
-
-## 6\. Final Conclusion & Recommendation
-
-I have scientifically proven that the problem is **NOT technical** (mobile), **NOT marketing** (traffic), **NOT logistics** (countries), and **NOT clarity** (time on page).
-
-The problem is **UNIVERSAL and FUNDAMENTAL**.
+I have scientifically proven that the problem is **NOT technical**, **NOT marketing**, **NOT logistics**, and **NOT clarity**. The problem is **UNIVERSAL and FUNDAMENTAL**.
 
 The drop-off is a "tax" that the Product Page's User Experience (UX) is charging *all* users equally.
 
@@ -389,7 +341,7 @@ La tabla `event_log` tiene la siguiente estructura:
 
 ## 3\. El Dashboard (Resultado Final)
 
-Este es el dashboard completo que resume toda la investigación. A continuación, se detalla el análisis paso a paso.
+Este dashboard resume toda la investigación. Los 5 gráficos cuentan la historia desde la identificación del problema hasta la causa raíz final.
 
 -----
 
@@ -401,7 +353,6 @@ En lugar de cargar datos crudos en Power BI, usé MySQL para pre-agregar y segme
 \<summary\>Haz clic para ver las 5 (Nuevas) Consultas SQL\</summary\>
 
 **Consulta 1: Funnel General de 5 Pasos (El "Qué")**
-*Esta consulta cuenta las sesiones únicas que alcanzaron cada etapa del embudo de 5 pasos.*
 
 ```sql
 /*
@@ -462,19 +413,15 @@ ORDER BY
 ```
 
 **Consulta 2: Hipótesis 1 (Dispositivo)**
-*Esta consulta segmenta el embudo de 5 pasos por dispositivo.*
 
 ```sql
 /*
 -- Segmentation Query 1 (The "Why" - Part 1: Device)
--- Segments the 5-step funnel by DeviceType.
 */
-
--- PASO 1: Crear una tabla temporal de resumen de acciones por sesión
 WITH SessionActions AS (
     SELECT
         SessionID,
-        DeviceType, -- La columna por la que segmentamos
+        DeviceType, 
         MAX(CASE WHEN PageType = 'home' THEN 1 ELSE 0 END) AS saw_homepage,
         MAX(CASE WHEN PageType = 'product_page' THEN 1 ELSE 0 END) AS saw_product_page,
         MAX(CASE WHEN PageType = 'cart' THEN 1 ELSE 0 END) AS saw_cart,
@@ -485,7 +432,6 @@ WITH SessionActions AS (
     GROUP BY
         SessionID, DeviceType
 )
--- PASO 2: Contar los resultados de esa tabla temporal
 SELECT
     DeviceType,
     SUM(saw_homepage) AS homepage_sessions,
@@ -500,19 +446,15 @@ GROUP BY
 ```
 
 **Consulta 3: Hipótesis 2 (Fuente de Tráfico)**
-*Esta consulta segmenta el embudo de 5 pasos por fuente de tráfico.*
 
 ```sql
 /*
 -- Segmentation Query 2 (The "Why" - Part 2: Referral)
--- Segments the 5-step funnel by ReferralSource.
 */
-
--- PASO 1: Crear una tabla temporal de resumen de acciones por sesión
 WITH SessionActions AS (
     SELECT
         SessionID,
-        ReferralSource, -- <--- El único cambio está aquí
+        ReferralSource, 
         MAX(CASE WHEN PageType = 'home' THEN 1 ELSE 0 END) AS saw_homepage,
         MAX(CASE WHEN PageType = 'product_page' THEN 1 ELSE 0 END) AS saw_product_page,
         MAX(CASE WHEN PageType = 'cart' THEN 1 ELSE 0 END) AS saw_cart,
@@ -521,11 +463,10 @@ WITH SessionActions AS (
     FROM
         event_log
     GROUP BY
-        SessionID, ReferralSource -- <--- Y aquí
+        SessionID, ReferralSource
 )
--- PASO 2: Contar los resultados de esa tabla temporal
 SELECT
-    ReferralSource, -- <--- Y aquí
+    ReferralSource, 
     SUM(saw_homepage) AS homepage_sessions,
     SUM(saw_product_page) AS product_page_sessions,
     SUM(saw_cart) AS cart_sessions,
@@ -534,23 +475,19 @@ SELECT
 FROM
     SessionActions
 GROUP BY
-    ReferralSource; -- <--- Y aquí
+    ReferralSource;
 ```
 
 **Consulta 4: Hipótesis 3 (País)**
-*Esta consulta segmenta el embudo de 5 pasos por país.*
 
 ```sql
 /*
 -- Segmentation Query 3 (The "Why" - Part 3: Country)
--- Segments the 5-step funnel by Country.
 */
-
--- PASO 1: Crear una tabla temporal de resumen de acciones por sesión
 WITH SessionActions AS (
     SELECT
         SessionID,
-        Country, -- <--- El único cambio está aquí
+        Country, 
         MAX(CASE WHEN PageType = 'home' THEN 1 ELSE 0 END) AS saw_homepage,
         MAX(CASE WHEN PageType = 'product_page' THEN 1 ELSE 0 END) AS saw_product_page,
         MAX(CASE WHEN PageType = 'cart' THEN 1 ELSE 0 END) AS saw_cart,
@@ -559,11 +496,10 @@ WITH SessionActions AS (
     FROM
         event_log
     GROUP BY
-        SessionID, Country -- <--- Y aquí
+        SessionID, Country
 )
--- PASO 2: Contar los resultados de esa tabla temporal
 SELECT
-    Country, -- <--- Y aquí
+    Country, 
     SUM(saw_homepage) AS homepage_sessions,
     SUM(saw_product_page) AS product_page_sessions,
     SUM(saw_cart) AS cart_sessions,
@@ -572,21 +508,15 @@ SELECT
 FROM
     SessionActions
 GROUP BY
-    Country; -- <--- Y aquí
+    Country;
 ```
 
 **Consulta 5: Hipótesis 4 (Tiempo en Página)**
-*Esta consulta prueba si los usuarios que añaden al carrito pasan más tiempo en las páginas de producto que los que no.*
 
 ```sql
 /*
 -- Segmentation Query 4 (The "Why" - Part 4: TimeOnPage)
--- Compara el tiempo AVG en páginas de producto para sesiones que
--- convirtieron (añadieron al carrito) vs. las que no.
 */
-
--- PASO 1: Crear una tabla temporal para etiquetar cada sesión
--- con su "estado de conversión" (¿llegó al carrito?)
 WITH SessionStatus AS (
     SELECT
         SessionID,
@@ -596,8 +526,6 @@ WITH SessionStatus AS (
     GROUP BY
         SessionID
 )
--- PASO 2: Unir ese estado a la tabla principal
--- para comparar el tiempo gastado SOLAMENTE en páginas de producto.
 SELECT
     CASE
         WHEN ss.eventually_added_to_cart = 1 THEN 'Group 1: Added to Cart'
@@ -611,7 +539,7 @@ FROM
 JOIN
     SessionStatus AS ss ON e.SessionID = ss.SessionID
 WHERE
-    e.PageType = 'product_page' -- SOLO nos importa el tiempo en páginas de producto
+    e.PageType = 'product_page' 
 GROUP BY
     user_group;
 ```
@@ -620,47 +548,23 @@ GROUP BY
 
 -----
 
-## 5\. La Investigación (Análisis Paso a Paso)
+## 5\. Conclusiones y Recomendación Final
 
-Mi análisis siguió un proceso de eliminación de hipótesis.
+Mi análisis siguió un proceso de eliminación de hipótesis, todas visibles en el dashboard:
 
-### Insight 1 (El "Qué"): Identificando el Problema
+  * **Insight 1 (El "Qué"):** El gráfico de embudo (`chart_1_funnel.png`) muestra dos caídas principales: una en **Product Page -\> Cart** (la más grande) y otra en **Cart -\> Checkout**. La investigación se centró en la primera caída.
 
-El primer paso fue entender el nuevo embudo de 5 pasos. Los datos muestran dos caídas (drop-offs) principales:
+  * **Insight 2 (Hipótesis 1: FALSO):** El gráfico de `Dispositivo` (`chart_2_device.png`) prueba que el problema no es técnico. El patrón de caída es idéntico en Mobile, Desktop y Tablet.
 
-1.  **Product Page -\> Cart:** Un gran número de usuarios ve productos pero nunca los añade al carrito.
-2.  **Cart -\> Checkout:** Un número significativo de usuarios añade artículos al carrito pero lo abandona antes de iniciar el pago.
+  * **Insight 3 (Hipótesis 2: FALSO):** El gráfico de `Fuente de Tráfico` (`chart_3_referral.png`) prueba que el problema no es "tráfico basura" de marketing. Todas las fuentes (Google, Social, etc.) convierten igual de mal.
 
-La caída de **Product Page a Cart** es la más grande, así que será el foco de la investigación.
+  * **Insight 4 (Hipótesis 3: FALSO):** El gráfico de `País` (`chart_4_country.png`) prueba que el problema no es de logística (ej. costos de envío). La caída es universal en todos los países.
 
-### Insight 2 (Hipótesis 1: FALSO): ¿Es un problema de Dispositivo?
+  * **Insight 5 (Hipótesis 4: FALSO):** El gráfico de `Tiempo en Página` (`chart_5_time.png`) prueba que el problema no es de confusión. Los usuarios que *no* convierten (95s) pasan casi el mismo tiempo en la página que los que *sí* convierten (97s).
 
-Mi primera hipótesis fue que podría ser un problema técnico (ej. el botón "Añadir al Carrito" está roto en móviles).
-**Conclusión: FALSO.** El gráfico de segmentación por dispositivo muestra que el porcentaje de caída (la barra color salmón) es *idéntico* en Mobile, Desktop y Tablet. El problema no es técnico.
+### Conclusión Final
 
-### Insight 3 (Hipótesis 2: FALSO): ¿Es un problema de Marketing?
-
-Mi segunda hipótesis fue que el equipo de marketing estaba atrayendo "tráfico basura" (ej. de Social Media) que solo miraba pero nunca compraba.
-**ConVclusión: FALSO.** El gráfico de segmentación por fuente de tráfico muestra que *todas* las fuentes (Social Media, Email, Directo, Google) tienen exactamente el mismo patrón de caída. El tráfico es de buena calidad; el problema está en la página.
-
-### Insight 4 (Hipótesis 3: FALSO): ¿Es un problema de Logística?
-
-Mi tercera hipótesis fue que podría ser un problema de logística (ej. costos de envío muy altos para ciertos países).
-**Conclusión: FALSO.** El gráfico de segmentación por país muestra que la caída es universal. Usuarios en USA, UK, India y Francia abandonan en la misma proporción. No es un problema de envíos.
-
-### Insight 5 (Hipótesis 4: FALSO): ¿Es un problema de Claridad?
-
-Mi hipótesis final fue que la página de producto era confusa, y los usuarios abandonaban rápido porque no entendían la oferta.
-**Conclusión: FALSO.** El análisis de tiempo en página muestra que los usuarios que NO añaden al carrito (Grupo 2) pasan 95 segundos en promedio, casi lo mismo que los 97 segundos de los que SÍ añaden (Grupo 1).
-Los usuarios *tienen* tiempo de sobra para decidir; el problema no es de confusión.
-
------
-
-## 6\. Conclusión Final y Recomendación
-
-He probado científicamente que el problema **NO es técnico** (móvil), **NO es de marketing** (tráfico), **NO es de logística** (países) y **NO es de claridad** (tiempo en página).
-
-El problema es **UNIVERSAL Y FUNDAMENTAL**.
+He probado científicamente que el problema **NO es técnico**, **NO es de marketing**, **NO es de logística** y **NO es de claridad**. El problema es **UNIVERSAL Y FUNDAMENTAL**.
 
 La caída es un "impuesto" que la Experiencia de Usuario (UX) de la página de producto está cobrando a *todos* los usuarios por igual.
 
@@ -675,4 +579,6 @@ El equipo de Producto (UX/UI) debe centrarse 100% en rediseñar la página de pr
 <!-- end list -->
 
 ```
+
+Por cierto, para desbloquear la funcionalidad completa de todas las aplicaciones, habilita la [actividad en las aplicaciones de Gemini](https://myactivity.google.com/product/gemini).
 ```
