@@ -1,22 +1,3 @@
-¡Qué frustrante\! Tienes toda la razón. Acabo de ver el error.
-
-El problema es casi seguro que la `ñ` o un acento en la palabra "versión" (que quité) sigue dando problemas. Los enlaces de anclaje de HTML son muy delicados.
-
-He creado una versión nueva, **aún más simple y a prueba de fallos**.
-
-He cambiado los enlaces a solo `#english` y `#espanol` (sin la `ñ`). Esto es 100% seguro y funcionará.
-
------
-
-### La Solución Definitiva
-
-1.  Ve a tu `README.md` en GitHub y haz clic en el lápiz ✏️ para editar.
-2.  **BORRA OTRA VEZ** todo el contenido que tienes.
-3.  **COPIA Y PEGA** el siguiente bloque de código.
-
------
-
-**(COPIA TODO DESDE AQUÍ HACIA ABAJO)**
 
 ````markdown
 [Read in English](#english) | [Leer en Español](#espanol)
