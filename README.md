@@ -40,7 +40,7 @@ The `event_log` table has the following structure:
 | `SessionID` | The unique identifier for a user session. | `VARCHAR` |
 | `UserID` | The unique identifier for a user. | `VARCHAR` |
 | `Timestamp` | The date and time of the event. | `TIMESTAMP` |
-| `PageType` | The stage of the funnel (`home`, `product_page`, `cart`, `checkout`, `confirmation`). | `VARCHAR` |
+| `PageType` | The stage of the funnel (`home`, `product_page`, `cart`, `confirmation`). | `VARCHAR` |
 | `DeviceType` | The device used (e.g., 'Mobile', 'Desktop', 'Tablet'). | `VARCHAR` |
 | `Country` | The user's country of origin. | `VARCHAR` |
 | `ReferralSource`| The source of the traffic (e.g., 'Google', 'Social Media'). | `VARCHAR` |
@@ -182,7 +182,7 @@ La tabla `event_log` tiene la siguiente estructura:
 | `SessionID` | Identificador único de la sesión de usuario. | `VARCHAR` |
 | `UserID` | Identificador único del usuario. | `VARCHAR` |
 | `Timestamp` | Fecha y hora del evento. | `TIMESTAMP` |
-| `PageType` | Etapa del embudo (`home`, `product_page`, `cart`, `checkout`, `confirmation`). | `VARCHAR` |
+| `PageType` | Etapa del embudo (`home`, `product_page`, `cart`, `confirmation`). | `VARCHAR` |
 | `DeviceType` | Dispositivo usado (ej. 'Mobile', 'Desktop', 'Tablet'). | `VARCHAR` |
 | `Country` | País de origen del usuario. | `VARCHAR` |
 | `ReferralSource`| Fuente del tráfico (ej. 'Google', 'Social Media'). | `VARCHAR` |
