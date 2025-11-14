@@ -1,5 +1,3 @@
-
-
 ````markdown
 [Read in English](#english) | [Leer en Español](#espanol)
 
@@ -250,7 +248,7 @@ The first step was to understand the 5-step funnel. The data shows two major dro
 ### Insight 2 (Hypothesis 1: FALSE): Is it a Device Issue?
 
 My first hypothesis was that it could be a technical issue (e.g., the "Add to Cart" button is broken on mobile).
-**Conclusion: FALSE.** The device segmentation chart shows that the drop-off percentage (the salmon-colored bar) is *identical* across Mobile, Desktop, and Tablet. The problem is not technical.
+**Conclusion: FALSE.** The device segmentation chart shows that the drop-off percentage is *identical* across Mobile, Desktop, and Tablet. The problem is not technical.
 
 ### Insight 3 (Hypothesis 2: FALSE): Is it a Marketing Issue?
 
@@ -554,7 +552,7 @@ El primer paso fue entender el embudo de 5 pasos. Los datos muestran dos caídas
 ### Insight 2 (Hipótesis 1: FALSO): ¿Es un problema de Dispositivo?
 
 Mi primera hipótesis fue que podría ser un problema técnico (ej. el botón "Añadir al Carrito" está roto en móviles).
-**Conclusión: FALSO.** El gráfico de segmentación por dispositivo muestra que el porcentaje de caída (la barra color salmón) es *idéntico* en Mobile, Desktop y Tablet. El problema no es técnico.
+**Conclusión: FALSO.** El gráfico de segmentación por dispositivo muestra que el porcentaje de caída es *idéntico* en Mobile, Desktop y Tablet. El problema no es técnico.
 
 ### Insight 3 (Hipótesis 2: FALSO): ¿Es un problema de Marketing?
 
