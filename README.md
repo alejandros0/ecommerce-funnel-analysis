@@ -4,7 +4,7 @@
 
 ---
 
-&lt;a name="english"&gt;&lt;/a&gt;
+<a name="english"></a>
 
 # 📊 E-Commerce Funnel & Segmentation Analysis (SQL + Power BI)
 
@@ -57,8 +57,12 @@ which is a best practice. The analysis is performed at the **SessionID** level t
 
 All SQL queries are stored as separate files for better version control and reusability:
 
-&lt;details&gt;
-&lt;summary&gt;Click to see all 5 SQL Queries&lt;/summary&gt;
+<details>
+<summary><b>Click to view the 5 SQL queries</b></summary>
+
+
+<br>
+
 
 **Query 1: General 5-Step Funnel (The "What")**
 Counts unique SessionIDs that reached each page.
@@ -80,7 +84,7 @@ Segmentation Query 3 (The "Why" - Part 3: Country)
 Segmentation Query 4 (The "Why" - Part 4: TimeOnPage)
 - **File:** [`sql_queries/05_time_onpage_analysis.sql`](sql_queries/05_time_onpage_analysis.sql)
 
-&lt;/details&gt;
+</details>
 
 ---
 
@@ -142,7 +146,7 @@ The Product (UX/UI) team must stop looking for external culprits and focus 100% 
 
 ---
 
-&lt;a name="espanol"&gt;&lt;/a&gt;
+<a name="espanol"></a>
 
 # 📊 Análisis de Embudo y Segmentación en E-Commerce (SQL + Power BI)
 
@@ -195,8 +199,10 @@ lo cual es una mejor práctica. El análisis se realiza a nivel de **SessionID**
 
 Todas las consultas SQL están almacenadas como archivos separados para mejor control de versiones y reusabilidad:
 
-&lt;details&gt;
-&lt;summary&gt;Haz clic para ver las 5 consultas SQL&lt;/summary&gt;
+<details>
+<summary><b>Haz clic para ver las 5 consultas SQL</b></summary>
+
+<br>
 
 **Consulta 1: Embudo General de 5 Pasos (El "Qué")**
 Cuenta SessionIDs únicos que llegaron a cada página.
@@ -218,7 +224,7 @@ Consulta de Segmentación 3 (El "Por qué" - Parte 3: País)
 Consulta de Segmentación 4 (El "Por qué" - Parte 4: TimeOnPage)
 - **Archivo:** [`sql_queries/05_time_onpage_analysis.sql`](sql_queries/05_time_onpage_analysis.sql)
 
-&lt;/details&gt;
+</details>
 
 ---
 
