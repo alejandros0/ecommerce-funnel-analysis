@@ -1,4 +1,4 @@
-[Read in English](#english) | [Leer en Español](#español)
+[Read in English](#english) | [Leer en Español](#espanol)
 
 ---
 
@@ -262,7 +262,7 @@ The 'Add to Cart' Button (Test a different color/text).
 
 The Offer (Test adding a 'Free Shipping' banner).
 
-<a name="español"></a>
+<a name="espanol"></a>
 
 📊 Análisis de Funnel y Segmentación de E-Commerce (SQL + Power BI)
 Este es un proyecto de Análisis de Funnel (Funnel Analysis) que replica un escenario de negocio real. El análisis sigue el viaje de un detective: desde encontrar un problema ("El Qué") hasta probar y refutar sistemáticamente 4 hipótesis comunes para encontrar la verdadera causa raíz ("El Por Qué").
